@@ -1,5 +1,19 @@
+import {Route, Routes} from "react-router-dom";
+import SignUp from "./pages/SignUp";
+import {Toaster} from "@/components/ui/sonner";
+import Login from "./pages/Login";
+
 function App() {
-  return <h1>Start Here</h1>;
+  return (
+    <>
+      <Toaster />
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    </>
+  );
 }
 
 export default App;
