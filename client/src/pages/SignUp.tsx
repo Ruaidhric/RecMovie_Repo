@@ -16,9 +16,11 @@ import {Button} from "@/components/ui/button";
 import {createUserWithEmailAndPassword, updateProfile} from "firebase/auth";
 import {doc, serverTimestamp, setDoc} from "firebase/firestore";
 import type {FirebaseError} from "firebase/app";
+import {useAuth} from "@/context/AuthContext";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const {setUserInContext} = useAuth();
   const [formData, setFormData] = useState<SignUpFormData>({
     displayName: "",
     email: "",
@@ -69,10 +71,12 @@ const SignUp = () => {
         createdAt: serverTimestamp(),
       });
 
+      setUserInContext(cred.user);
+
       toast.success("Welcome to RecMovie!", {
         description: "Your account has been created successfully.",
       });
-      navigate("/profile");
+      navigate("/dashboard");
     } catch (e) {
       const err = e as FirebaseError;
       toast.warning("Registration failed", {
