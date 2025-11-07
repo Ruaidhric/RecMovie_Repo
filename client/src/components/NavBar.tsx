@@ -2,6 +2,7 @@ import {useNavigate} from "react-router-dom";
 import {useAuth} from "@/context/AuthContext";
 import {Button} from "@/components/ui/button";
 import {Film} from "lucide-react";
+import {toast} from "sonner";
 
 const Navbar = () => {
   const {user, logout} = useAuth();
@@ -10,8 +11,17 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await logout();
+      toast.success("You have been logout!", {
+        description:
+          "You were successfully logged out and redirect to main page.",
+      });
+
       navigate("/login");
     } catch (error) {
+      const err = error as Error;
+      toast.error("Login failed", {
+        description: err?.message,
+      });
       console.error("Error during logout:", error);
     }
   };
