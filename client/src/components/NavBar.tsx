@@ -1,12 +1,13 @@
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useLocation} from "react-router-dom";
 import {useAuth} from "@/context/AuthContext";
 import {Button} from "@/components/ui/button";
-import {Film} from "lucide-react";
+import {Film, History} from "lucide-react";
 import {toast} from "sonner";
 
 const Navbar = () => {
   const {user, logout} = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
@@ -26,6 +27,8 @@ const Navbar = () => {
     }
   };
 
+  const isOnDashboard = location.pathname === "/dashboard";
+
   return (
     <nav className="w-full border-b bg-white/70 backdrop-blur-md shadow-sm">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -40,7 +43,7 @@ const Navbar = () => {
           <span className="font-semibold text-lg text-slate-900">RecMovie</span>
         </div>
 
-        {/* Right side - User info and Logout */}
+        {/* Right side - User info, History button and Logout */}
         <div className="flex items-center gap-4 text-sm">
           <span className="text-slate-600 hidden sm:inline">
             Hello,{" "}
@@ -48,6 +51,19 @@ const Navbar = () => {
               {user?.displayName || user?.email || "Movie Lover"}
             </span>
           </span>
+
+          {!isOnDashboard && (
+            <Button
+              onClick={() => navigate("/dashboard")}
+              variant="outline"
+              size="sm"
+              className="border-slate-300 text-slate-700 hover:bg-slate-900 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <History className="w-4 h-4" />
+              History
+            </Button>
+          )}
+
           <Button
             onClick={handleLogout}
             variant="outline"
