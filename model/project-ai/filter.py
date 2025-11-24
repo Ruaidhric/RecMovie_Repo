@@ -15,10 +15,16 @@ def filter_movies(data, mood=None, preferred_length=None, language=None, country
 
     # Mood filter
     mood_to_genres = {
-        "happy": ["Comedy", "Romance", "Adventure"],
+        "happy": ["Comedy", "Romance", "Family", "Adventure"],
         "sad": ["Drama", "Romance"],
-        "depressed": ["Comedy", "Family", "Animation"],
-        "confident": ["Action", "Thriller", "Adventure"]
+        "excited": ["Action", "Adventure", "Thriller", "Science Fiction"],
+        "relaxed": ["Romance", "Comedy", "Family", "Music"],
+        "adventurous": ["Adventure", "Action", "Fantasy"],
+        "romantic": ["Romance", "Drama"],
+        "scared": ["Horror", "Thriller", "Mystery"],
+        "thoughtful": ["Drama", "History", "Mystery"],
+        "energetic": ["Action", "Adventure"],
+        "melancholic": ["Drama", "Music", "Romance"]
     }
 
     wanted_genres = set()  # Initialise an empty set of the genres that will be valid
@@ -66,4 +72,4 @@ def filter_movies(data, mood=None, preferred_length=None, language=None, country
             threshold = filtered["popularity"].quantile(0.3)  # bottom 30% niche
             filtered = filtered[filtered["popularity"] <= threshold]
 
-    return filtered.reset_index(drop=True)
+    return filtered
