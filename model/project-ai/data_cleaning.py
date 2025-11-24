@@ -1,4 +1,5 @@
 import pandas as pd
+import csv
 
 if __name__ == "__main__":
     # Read the uncleaned data in from the old CSV file
@@ -22,7 +23,6 @@ if __name__ == "__main__":
         "production_companies",  # Could possibly keep, but as is we aren't looking at a user's preferred companies
         "spoken_languages",  # Should use the original_language field to filter by language instead
         "cast",  # Not important to the project
-        "director",  # Not important to the project
         "director_of_photography",  # Not important to the project
         "writers",  # Not important to the project
         "producers",  # Not important to the project
@@ -43,8 +43,10 @@ if __name__ == "__main__":
         "genres",
         "production_countries",
         "popularity",
-        "imdb_rating"
-    ]  # Could potentially also include overview, poster_path in here
+        "imdb_rating",
+        "director",
+        "poster_path"
+    ]
 
     filtered_data = filtered_data.dropna(subset=necessary_columns)
 
@@ -64,12 +66,19 @@ if __name__ == "__main__":
 
     # Combined column for embeddings
     filtered_data["combined"] = filtered_data.apply(
-        lambda row: f"Title: {row['title']}. Overview: {row['overview']} Genres: {', '.join(row['genres'])}. "
-                    f"Year: {row['year']}. Runtime: {row['runtime']} min. "
-                    f"Language: {row['original_language']}. Popularity: {row['popularity']:.2f}. "
-                    f"Rating: {row['imdb_rating']:.2f}. Poster: https://image.tmdb.org/t/p/w500{row['poster_path']}",
+        lambda row: f"Title: {row['title']}. Overview: {row['overview']} Genres: {', '.join(row['genres'])}. Year: "
+                    f"{row['year']}. Runtime: {row['runtime']} min. Director: {row['director']}. Countries: "
+                    f"{', '.join(row['production_countries'])}. Language: {row['original_language']}. Popularity: "
+                    f"{row['popularity']:.2f}. Rating: {row['imdb_rating']:.2f}. ID: {row.name}. Poster: "
+                    f"https://image.tmdb.org/t/p/w500{row['poster_path']}",
         axis=1
     )
 
     # Write the cleaned data to the new CSV file
-    filtered_data.to_csv("datasets/movie_dataset.csv", index=False)
+    filtered_data.to_csv(
+        "datasets/movie_dataset.csv",
+        index=True,
+        index_label="id",
+        quoting=csv.QUOTE_ALL,
+        escapechar="\\"
+    )
