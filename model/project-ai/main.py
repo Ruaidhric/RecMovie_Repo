@@ -10,6 +10,7 @@ if not os.path.exists("datasets/movie_dataset.csv"):
     raise FileNotFoundError("Dataset not found, please run data_cleaning first.")
 
 data = pd.read_csv("datasets/movie_dataset.csv")
+data.set_index("id", inplace=True)
 
 # AI Model (Gemini Chat)
 llm = ChatGoogleGenerativeAI(
@@ -39,16 +40,16 @@ def ids_to_json(ids: list[int], filtered_data: pd.DataFrame):
 
     for movie_id in ids:
         try:
-            matching_movie = filtered_data.iloc[movie_id]
+            matching_movie = filtered_data.loc[movie_id]
         except IndexError:
             continue
 
-        results.append({"content": matching_movie["combined"]})
+        results.append({"content": matching_movie["combined"], "id": movie_id})
 
     return {"recommended_movies": results}
 
 
-def recommend_movies(request_json):
+def recommend_movies(request_json, previous_ids: list[int] = None):
     mood = request_json.get("mood")
     preferred_length = request_json.get("preferred_length")
     language = request_json.get("language")
@@ -62,6 +63,10 @@ def recommend_movies(request_json):
         number_recommended = 3
 
     filtered_data = filter_movies(data, mood, preferred_length, language, country, era, mainstream, selected_genres)
+
+    if previous_ids:
+        filtered_data = filtered_data.drop(index=previous_ids, errors="ignore")
+        # Removes films that were previously recommended
 
     if filtered_data.empty:
         return {"error": "No matching movies.", "recommended_movies": []}
@@ -96,11 +101,10 @@ if __name__ == "__main__":
         "mood": "happy",
         "preferred_length": 90,
         "language": "en",
-        "country": "United States of America",
         "era": "actual",
         "popularity": True,
         "selected_genres": ["Drama", "Romance", "Horror"],
-        "number_recommended": 1
+        "number_recommended": 2
     }
 
-    print(recommend_movies(test_json))
+    print(recommend_movies(test_json, [25, 227]))
