@@ -4,7 +4,7 @@ import pandas as pd
 from filter import filter_movies
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-GOOGLE_API_KEY = "AIzaSyDHLcIERguMmTFYIHDnEiIV12-C1ff0Ago"
+GOOGLE_API_KEY = ""
 
 if not os.path.exists("datasets/movie_dataset.csv"):
     raise FileNotFoundError("Dataset not found, please run data_cleaning first.")
