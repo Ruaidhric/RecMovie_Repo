@@ -6,43 +6,45 @@ import {Preferences} from "./pages/Preferences";
 import {ProtectedRoute} from "./routes/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Results from "./pages/Results";
-
-function App() {
+import {BrowserRouter} from "react-router-dom";
+import {AuthProvider} from "./context/AuthContext.tsx";
+const basename = import.meta.env.PROD ? "/rec-movie" : "/";
+export function App() {
   return (
-    <>
-      <Toaster />
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/questionnaire"
-          element={
-            <ProtectedRoute>
-              <Preferences />
-            </ProtectedRoute>
-          }
-        />
+    <AuthProvider>
+      <BrowserRouter basename={basename}>
+        <Toaster />
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/questionnaire"
+            element={
+              <ProtectedRoute>
+                <Preferences />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/results"
-          element={
-            <ProtectedRoute>
-              <Results />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </>
+          <Route
+            path="/results"
+            element={
+              <ProtectedRoute>
+                <Results />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
-
-export default App;

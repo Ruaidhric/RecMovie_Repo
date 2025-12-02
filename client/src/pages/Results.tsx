@@ -1,5 +1,5 @@
-import {useState} from "react";
-import {useLocation, useNavigate} from "react-router-dom";
+import {useEffect, useState} from "react";
+import {useLocation} from "react-router-dom";
 import Navbar from "@/components/NavBar";
 import {Button} from "@/components/ui/button";
 import {
@@ -14,40 +14,8 @@ import {useAuth} from "@/context/AuthContext";
 import {db} from "@/lib/firebase";
 import {collection, addDoc, serverTimestamp} from "firebase/firestore";
 import {toast} from "sonner";
-
-// Mock movie data - replace with actual API call
-const mockMovies = [
-  {
-    id: 1,
-    title: "The Grand Budapest Hotel",
-    year: 2014,
-    director: "Wes Anderson",
-    genres: ["Comedy", "Drama"],
-    rating: 8.1,
-    duration: 99,
-    language: "English",
-    country: "USA",
-    description:
-      "A writer encounters the owner of an aging high-class hotel, who tells him of his early years serving as a lobby boy in the hotel's glorious years under an exceptional concierge.",
-    poster:
-      "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=400&h=600&fit=crop",
-  },
-  {
-    id: 2,
-    title: "Before Sunrise",
-    year: 1995,
-    director: "Richard Linklater",
-    genres: ["Romance", "Drama"],
-    rating: 8.1,
-    duration: 101,
-    language: "English",
-    country: "USA",
-    description:
-      "A young man and woman meet on a train in Europe and wind up spending one evening together in Vienna. Unfortunately, both know that this will probably be their only night together.",
-    poster:
-      "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=600&fit=crop",
-  },
-];
+import {languageNames, parseMovie} from "@/utils";
+import {LoadingBox} from "@/components/LoadingBox";
 
 type ViewMode = "cards" | "table";
 
@@ -57,6 +25,7 @@ interface Movie {
   year: number;
   director: string;
   genres: string[];
+  countries: string[];
   rating: number;
   duration: number;
   language: string;
@@ -65,27 +34,36 @@ interface Movie {
   poster: string;
 }
 
+type MovieResponse = {
+  content: string;
+  id: number;
+};
 const Results = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const {user} = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
   const [isSaving, setIsSaving] = useState(false);
-  console.log(user?.uid);
+  const [isLoading, setIsLoading] = useState(false);
+  const [prev_ids, setPrevIds] = useState<number[]>([]);
+  const [movies, setMovies] = useState<Movie[]>(() =>
+    (location.state?.movies || []).map((m: MovieResponse) =>
+      parseMovie(m.content, m.id)
+    )
+  );
+
+  useEffect(() => {
+    if (!location.state?.movies) return;
+
+    setPrevIds((prev) => [
+      ...prev,
+      ...location.state.movies.map((m: MovieResponse) => m.id),
+    ]);
+  }, [location.state?.movies]);
+
   // Get preferences from location state
-  const preferences = location.state as {
-    mood?: string;
-    freeTime?: string;
-    language?: string;
-    country?: string;
-    era?: string;
-    popularity?: string;
-    genres?: string[];
-    movieCount?: string;
-  } | null;
+  const preferences = location.state.preferences;
 
   // In production, fetch movies based on preferences
-  const movies: Movie[] = mockMovies;
 
   const handleSaveToHistory = async () => {
     if (!user) {
@@ -117,7 +95,7 @@ const Results = () => {
       const recommendationData = {
         userId: user.uid,
         preferences: {
-          mood: preferences.mood || "",
+          mood: preferences.selectedMood || preferences.customMood,
           freeTime: preferences.freeTime || "",
           language: preferences.language || "",
           country: preferences.country || "",
@@ -135,12 +113,14 @@ const Results = () => {
           rating: movie.rating,
           duration: movie.duration,
           language: movie.language,
-          country: movie.country,
+          countries: movie.countries,
           description: movie.description,
           poster: movie.poster,
         })),
         createdAt: serverTimestamp(),
       };
+
+      console.log(recommendationData);
 
       // Save to Firestore
       await addDoc(recommendationsRef, recommendationData);
@@ -161,8 +141,73 @@ const Results = () => {
     }
   };
 
-  const handleGetNewRecommendations = () => {
-    navigate("/questionnaire");
+  // const handleGetNewRecommendations = () => {
+  //   navigate("/questionnaire");
+  // };
+
+  const handleGetNewRecommendations = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        "https://recmovie-repo.onrender.com/recommend",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mood: preferences.selectedMood?.toLowerCase(),
+            preferred_length: Number(preferences.freeTime),
+            language:
+              preferences.language === "any" ? null : preferences.language,
+            country: preferences.country === "any" ? null : preferences.country,
+            era: preferences.era === "any" ? null : preferences.era,
+            popularity:
+              preferences.popularity === "mainstream"
+                ? true
+                : preferences.popularity === "indie"
+                ? false
+                : null,
+            selected_genres: preferences.genres,
+            number_recommended: Number(preferences.movieCount),
+            previous_ids: prev_ids,
+          }),
+        }
+      );
+
+      console.log(prev_ids);
+
+      const result = await response.json();
+
+      if (result.recommended_movies.length == 0) {
+        setIsLoading(false);
+        toast.error(
+          "Unable to retrieve movies according to your preferences 😞",
+          {
+            description: (
+              <p className="text-red-400">
+                Unfortunately your preferences does not match any movies in our
+                database 😢
+              </p>
+            ),
+          }
+        );
+      } else {
+        setIsLoading(false);
+        // Pass API results to Results page
+        const newMovies = result.recommended_movies.map((m: MovieResponse) =>
+          parseMovie(m.content, m.id)
+        );
+        setMovies((prev) => [...newMovies, ...prev]);
+
+        setPrevIds((prev) => [
+          ...prev,
+          ...result.recommended_movies.map((m: MovieResponse) => m.id),
+        ]);
+      }
+    } catch {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -179,7 +224,7 @@ const Results = () => {
             <p className="text-gray-600">
               Based on your mood:{" "}
               <span className="font-semibold text-purple-600">
-                {preferences.mood}
+                {preferences.selectedMood || preferences.customMood}
               </span>{" "}
               • Up to {preferences.freeTime} minutes
             </p>
@@ -240,18 +285,32 @@ const Results = () => {
         </div>
 
         {/* Content */}
-        {viewMode === "cards" ? (
-          <CardsView movies={movies} />
-        ) : (
-          <TableView movies={movies} />
-        )}
+        <div className="relative">
+          {/* Underlying content */}
+          <div className={isLoading ? "opacity-80 pointer-events-none" : ""}>
+            {viewMode === "cards" ? (
+              <CardsView movies={movies} country={preferences?.country} />
+            ) : (
+              <TableView movies={movies} country={preferences?.country} />
+            )}
+          </div>
+
+          {/* Overlay */}
+          {isLoading && (
+            <div className="absolute inset-0 flex justify-center pt-10 bg-white/40 backdrop-blur-sm z-50">
+              <div>
+                <LoadingBox />
+              </div>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
 };
 
 // Cards View Component
-const CardsView = ({movies}: {movies: Movie[]}) => {
+const CardsView = ({movies}: {movies: Movie[]; country: string}) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {movies.map((movie) => (
@@ -278,7 +337,7 @@ const CardsView = ({movies}: {movies: Movie[]}) => {
               {movie.genres.map((genre) => (
                 <span
                   key={genre}
-                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium"
+                  className="px-3 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium"
                 >
                   {genre}
                 </span>
@@ -301,7 +360,17 @@ const CardsView = ({movies}: {movies: Movie[]}) => {
             </p>
 
             <div className="text-xs text-gray-500">
-              {movie.language} • {movie.country}
+              <span className="flex flex-wrap gap-2 mb-4 items-center">
+                {languageNames[movie.language] ?? movie.language} •{" "}
+                {movie.countries.map((genre) => (
+                  <span
+                    key={genre}
+                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium"
+                  >
+                    {genre}
+                  </span>
+                ))}
+              </span>
             </div>
           </div>
         </div>
@@ -311,7 +380,7 @@ const CardsView = ({movies}: {movies: Movie[]}) => {
 };
 
 // Table View Component
-const TableView = ({movies}: {movies: Movie[]}) => {
+const TableView = ({movies}: {movies: Movie[]; country: string}) => {
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden">
       <div className="overflow-x-auto">

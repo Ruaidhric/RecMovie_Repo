@@ -1,7 +1,7 @@
 import {createContext, useContext, useEffect, useState, ReactNode} from "react";
 import {onAuthStateChanged, signOut, User} from "firebase/auth";
 import {auth} from "@/lib/firebase";
-
+/* eslint-disable react-refresh/only-export-components */
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -9,7 +9,9 @@ interface AuthContextType {
   setUserInContext: (user: User | null) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
 
 export const AuthProvider = ({children}: {children: ReactNode}) => {
   const [user, setUser] = useState<User | null>(null);

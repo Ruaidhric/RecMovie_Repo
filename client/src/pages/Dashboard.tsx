@@ -17,6 +17,8 @@ import {
 import {toast} from "sonner";
 import {Trash2, Clock, Star, Calendar} from "lucide-react";
 import {Loading} from "@/components/Loading";
+import {languageNames} from "@/utils";
+import MovieDialog from "@/components/MovieModal";
 
 interface Movie {
   id: number;
@@ -24,6 +26,7 @@ interface Movie {
   year: number;
   director: string;
   genres: string[];
+  countries: string[];
   rating: number;
   duration: number;
   language: string;
@@ -49,12 +52,25 @@ interface Recommendation {
   createdAt: Timestamp;
 }
 
+const capitalize = (word: string) => {
+  if (!word) return "";
+  return word[0].toUpperCase() + word.slice(1);
+};
+
 const Dashboard = () => {
   const {user} = useAuth();
   console.log(user);
   const navigate = useNavigate();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openMovieModal = (movie: Movie) => {
+    setSelectedMovie(movie);
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -132,7 +148,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-fuchsia-50 to-slate-50">
-      <Navbar /> run
+      <Navbar />
 
       {/* Content */}
       <main className="max-w-6xl mx-auto px-6 py-10">
@@ -159,7 +175,7 @@ const Dashboard = () => {
         {/* Recommendations List */}
         {recommendations.length === 0 ? (
           <Card className="bg-white/80 shadow-sm border-none">
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 ">
               <CardTitle className="sr-only">Saved Recommendations</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center py-12 gap-6">
@@ -175,11 +191,11 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-6 ">
             {recommendations.map((rec) => (
               <Card
                 key={rec.id}
-                className="bg-white shadow-md hover:shadow-lg transition-shadow"
+                className="bg-white shadow-md hover:shadow-lg transition-shadow bg-gray-50"
               >
                 <CardHeader className="border-b bg-gray-50 pb-4">
                   <div className="flex justify-between items-start">
@@ -197,11 +213,16 @@ const Dashboard = () => {
                         <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
                           {rec.preferences.freeTime} minutes
                         </span>
-                        <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full">
-                          {rec.preferences.language}
-                        </span>
+                        {rec.preferences.language == "any" ? (
+                          <span></span>
+                        ) : (
+                          <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full">
+                            {languageNames[rec.preferences.language]}
+                          </span>
+                        )}
+
                         <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full">
-                          Era: {rec.preferences.era}
+                          Era: {capitalize(rec.preferences.era)}
                         </span>
                       </div>
                     </div>
@@ -220,7 +241,8 @@ const Dashboard = () => {
                     {rec.movies.map((movie) => (
                       <div
                         key={movie.id}
-                        className="flex gap-4 p-4 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors"
+                        className="flex gap-4 p-4 rounded-lg border border-gray-200 hover:border-purple-300 transition-colors cursor-pointer hover:bg-gray-200"
+                        onClick={() => openMovieModal(movie)}
                       >
                         <img
                           src={movie.poster}
@@ -232,13 +254,14 @@ const Dashboard = () => {
                             {movie.title}
                           </h3>
                           <p className="text-sm text-gray-600 mb-2">
-                            {movie.year} • {movie.director}
+                            {movie.year} • {movie.director} •{" "}
+                            {languageNames[movie.language]}
                           </p>
                           <div className="flex flex-wrap gap-1 mb-2">
                             {movie.genres.map((genre) => (
                               <span
                                 key={genre}
-                                className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs"
+                                className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-[10px]"
                               >
                                 {genre}
                               </span>
@@ -256,9 +279,18 @@ const Dashboard = () => {
                               <span>{movie.duration} min</span>
                             </div>
                           </div>
-                          <p className="text-xs text-gray-500 mt-2">
-                            {movie.language} • {movie.country}
-                          </p>
+                          <div className="text-xs text-gray-500 mt-2">
+                            <div className="flex flex-wrap gap-2 mb-4 items-center">
+                              {movie.countries?.map((country) => (
+                                <span
+                                  key={country}
+                                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium"
+                                >
+                                  {country}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -269,6 +301,11 @@ const Dashboard = () => {
           </div>
         )}
       </main>
+      <MovieDialog
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        movie={selectedMovie}
+      />
     </div>
   );
 };

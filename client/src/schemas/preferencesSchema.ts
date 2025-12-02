@@ -2,8 +2,7 @@ import z from "zod";
 
 export const preferencesSchema = z
     .object({
-        moodOption: z.enum(["choose", "describe"]),
-        selectedMood: z.string().optional(),
+        selectedMood: z.string().min(1, "Select one mood."),
         customMood: z.string().optional(),
         freeTime: z.string(),
         language: z.string(),
@@ -19,25 +18,6 @@ export const preferencesSchema = z
             .min(1, "At least 1 movie.")
             .max(20, "Maximum 20 movies."),
     })
-    .superRefine((data, ctx) => {
-        if (data.moodOption === "choose") {
-            if (!data.selectedMood || data.selectedMood.trim() === "") {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    path: ["selectedMood"],
-                    message: "Select a mood or switch to describe it yourself.",
-                });
-            }
-        } else {
-            if (!data.customMood || data.customMood.trim() === "") {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    path: ["customMood"],
-                    message: "Describe your mood or switch to choose from options.",
-                });
-            }
-        }
-    });
 
 export type PreferencesFormData = z.infer<typeof preferencesSchema>;
 
