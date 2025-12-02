@@ -12,7 +12,7 @@ app = FastAPI(title="Movie Recommendation API", version="1.0.0")
 allowed_origins = [
     "http://localhost:5173",  # Local development
     "http://localhost:4173",  # Local preview
-    "https://luispellizzon.github.io",  # Your GitHub Pages
+    "https://ruaidhric.github.io/" # GH  pages
 ]
 
 app.add_middleware(
