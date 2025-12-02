@@ -7,7 +7,7 @@ import path from "path"
 export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
-    base: mode === "production" ? "/rec-movie/" : "/",
+    base: mode === "production" ? "/RecMovie_Repo/" : "/",
     build: {
       outDir: 'dist',
       assetsDir: 'assets'
