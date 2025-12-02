@@ -8,7 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Results from "./pages/Results";
 import {BrowserRouter} from "react-router-dom";
 import {AuthProvider} from "./context/AuthContext.tsx";
-const basename = import.meta.env.PROD ? "/rec-movie" : "/";
+const basename = import.meta.env.PROD ? "/RecMovie_Repo" : "/";
 export function App() {
   return (
     <AuthProvider>
