@@ -80,7 +80,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          lfs: true # Enable Git LFS for database file
+          lfs: false
+
+      - name: Restore large dataset manually (bypasses LFS quota)
+        run: |
+          mkdir -p model/project-ai/datasets
+          curl -L \
+            -o model/project-ai/datasets/movie_dataset.db \
+            https://raw.githubusercontent.com/Ruaidhric/RecMovie_Repo/main/model/project-ai/datasets/movie_dataset.db
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -99,6 +106,7 @@ jobs:
         working-directory: ./model/project-ai
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY || 'test-key-for-ci' }}
+          OPEN_AI_KEY: ${{ secrets.OPEN_AI_KEY || 'test-key-for-ci' }}
         run: |
           pytest tests/ \
             --cov=. \
