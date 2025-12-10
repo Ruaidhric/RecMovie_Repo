@@ -104,7 +104,8 @@ export const Preferences: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        "https://recmovie-repo.onrender.com/recommend",
+        "https://rec-movie.onrender.com/recommend",
+
         {
           method: "POST",
           headers: {

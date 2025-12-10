@@ -148,32 +148,29 @@ const Results = () => {
   const handleGetNewRecommendations = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        "https://recmovie-repo.onrender.com/recommend",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            mood: preferences.selectedMood?.toLowerCase(),
-            preferred_length: Number(preferences.freeTime),
-            language:
-              preferences.language === "any" ? null : preferences.language,
-            country: preferences.country === "any" ? null : preferences.country,
-            era: preferences.era === "any" ? null : preferences.era,
-            popularity:
-              preferences.popularity === "mainstream"
-                ? true
-                : preferences.popularity === "indie"
-                ? false
-                : null,
-            selected_genres: preferences.genres,
-            number_recommended: Number(preferences.movieCount),
-            previous_ids: prev_ids,
-          }),
-        }
-      );
+      const response = await fetch("https://rec-movie.onrender.com/recommend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mood: preferences.selectedMood?.toLowerCase(),
+          preferred_length: Number(preferences.freeTime),
+          language:
+            preferences.language === "any" ? null : preferences.language,
+          country: preferences.country === "any" ? null : preferences.country,
+          era: preferences.era === "any" ? null : preferences.era,
+          popularity:
+            preferences.popularity === "mainstream"
+              ? true
+              : preferences.popularity === "indie"
+              ? false
+              : null,
+          selected_genres: preferences.genres,
+          number_recommended: Number(preferences.movieCount),
+          previous_ids: prev_ids,
+        }),
+      });
 
       console.log(prev_ids);
 
